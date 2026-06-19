@@ -1,52 +1,126 @@
-<justify-content: center>
- <h1 class ="title-text">一時停止システム</h1>
- <button id="start-button" type="button" onclick="init()">start</button>
-</center>
+<!DOCTYPE html>
+<html lang="ja">
+<center>
+<h1 class ="title-text">留萌高校電気建築科</h1>
 <button id="help-button" onclick="showhelp()">ヘルプ</button>
+
+
+
+
+
+
+
+
+
+
+  <div id="title-text">
+<span class="logo-char char-b">一</span>
+<span class="logo-char char-p">時</span>
+<span class="logo-char char-y">停</span>
+<span class="logo-char char-g">止</span>
+<span class="logo-char char-u">シ</span>
+<span class="logo-char char-a">ス</span>
+<span class="logo-char char-m">テ</span>
+<span class="logo-char char-z">ム</span>
+</div>
+
+
+
+
+
+
+ <button id="permission-btn" onclick="requestAccess()">加速度センサーを許可</button>
+ <button id="start-button" style="display: none;" onclick="init()">開始</button>
+ <div class="speed">0.0</div>
+ <div class="unit">km/h</div>
+ <span id="stop-status" class="highlight">判定中</span>
+ <div class="data-box" id="data-area" style="display: none;">
+ <span class="label">今の揺れ</span>
+ <span id="val-total" class="highlight">0.00</span>
 <div id="webcam-container"></div>
-<div id="warning-message">止まれ！</div>
 <div id="label-container"></div>
+</center>
+<div id="warning-message">止まれ！</div>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 <meta name="viewport" content="width=device-width">
-<h1 class ="title-text">留萌高校電気建築科</h1>
+
+<div style="display: flex; justify-content: flex-end;">
+  <img src="IMG_02-removebg-preview.png" alt="写真" style="width: 400px;">
+</div>
+
+<div style="display: flex; justify-content: flex-start;">
+  <img src="IMG_01-removebg-preview.png " alt="写真" style="width: 400px;">
+</div>
+
+
+
+
+
 <head>
-
-
  <style>
-
-
-center{
-    display:flex;
-    flex-direction: column;
-    align-items: center
-}
   div {color:rgb(0, 0, 0);}
   div {font-size: 40px;}
-  button {color:rgb(235, 10, 10);}
-  button {font-size: 70px;}
-  button {background-color:rgb(250, 217, 0);}
-  button {padding: 5px 100px;
-margin-top: 300px;
-}
-body {
-    display:flex;
-    flex-direction:column;
-    justify-content: center; /*縦中央*/
-    align-items:center; /*横中央*/
-    height: 100vh
-  
+  button {color:rgb(0, 0, 0);}
+  button {font-size: 40px;}
+  button {background-color:rgb(0, 208, 250);}
+  button {padding: 5px 30px;}
+  button {border-radius: 10px;}
+  body   {font-family: sans-serif; text-align:right}
+  #speed {font-size: 50px; font-weight: bold; color:rgb(0, 0, 0)}
+  .unit  {font-size: 30px; }
+  #stop-status,#higilight {font-size: 50px; font-weight: bold; color:rgb(0, 0, 0)}
+  #webcam-container {
+    display: flex;
+    justify-content: center; /* 左右中央 */
+    align-items: center;     /* 上下中央 */
+    min-height: 100vh;      /* 画面全体を高さにする場合 */
 }
 
- 
+.logo-char{
+    display:inline-block;
+    font-size:100px;
+    font-weight:bold;
+}
+
+
+.char-b { color: #4DA6FF; transform: rotate(-15deg); }
+    .char-p { color: #FF6B6B; transform: rotate(51deg); }
+    .char-y { color: #FAD02E; transform: rotate(-13deg); }
+    .char-g { color: #2ECC71; transform: rotate(84deg); }
+    .char-u { color: #a60ca4; transform: rotate(9deg); }
+    .sub-title { font-size: 18px; color: #444; font-weight: bold; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; }
+
+    #image-container { max-width: 90%; margin: 0 auto 25px auto; }
+    .roadmap-img { max-width: 85%; height: auto; border-radius: 20px; }
+
+
+
+
+
+
+    #help-button{
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 9999;
+    font-size: 25px;
+    
+}
+
+
+
+
+
+
+
 
 /* カメラ映像のサイズ調整（任意） */
 #webcam-container video {
-    max-width: 100%;
-    height: auto;
+  width: 100%;   
+  max-width: 100%;
+  height: auto;
 }
-
-
 
 #warning-message {
       display: none; /* 最初は隠しておく（超重要） */
@@ -64,29 +138,25 @@ body {
       transform: translate(-50%, -50%);
       z-index: 100; /* カメラより手前に出す */
   }
-
-
-#help-button{
-position: fixed; top: 20px; left: 20px; font-size: 16px; color: #999; background: white;
-      border: 2px solid #ddd; padding: 6px 22px; border-radius: 20px; font-weight: bold;
-      cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s; z-index: 10;
-}
-
   </style>
 </head>
 
 
+
 <script type="text/javascript">
+    function requestAccess() {
+    // 2つ目のボタンの要素を取得
+    const nextBtn = document.getElementById("start-button");
+    // 表示状態を切り替える（noneからblockにする）
+    nextBtn.style.display = 'block';
+  }
     // More API functions here:
     // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
     // the link to your model provided by Teachable Machine export panel
     const URL = "https://teachablemachine.withgoogle.com/models/_2ZlDZ7MH/";
 
     let model, webcam, labelContainer, maxPredictions;
-
-    function showhelp(){
-        alert("注意”\n\n１七山豪斗はゴリラなので襲って来る可能性があります。\n２七山豪斗を怒らせてはいけない\n３七山豪斗はでかいので戦意損失しないように意識を保ってください\n");
-    }
 
     // Load the image model and setup the webcam
     async function init() {
@@ -148,33 +218,105 @@ position: fixed; top: 20px; left: 20px; font-size: 16px; color: #999; background
         if (isStopDetected === true) {
             // 見つかったら、警告メッセージを表示する（block）
             document.getElementById("warning-message").style.display = "block";
-    }
- 
-if (isStopDetected === true){
- // 1. コンテキスト作成
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        }
 
-// 2. オシレーター（音源）作成
-const oscillator = audioCtx.createOscillator();
-const gainNode = audioCtx.createGain();
-
-// 3. 周波数設定 (440Hz)
-oscillator.type = 'sine'; // サイン波
-oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // Hz
-
-// 4. 接続と再生
-oscillator.connect(gainNode);
-gainNode.connect(audioCtx.destination);
-gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-oscillator.start();
-gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-
-}
         else {
             // 見つからなかったら、隠す（none）
             document.getElementById("warning-message").style.display = "none";
             
         }
     }
+  if (navigator.geolocation) {
+      // 速度・位置情報の更新を監視
+      navigator.geolocation.watchPosition(success, error, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000
+      });
+    } else {
+      alert("このブラウザはGPSに対応していません。");
+    }
+
+    function success(position) {
+      // 取得できる速度(speed)の単位は「メートル/秒(m/s)」
+      let speedMps = position.coords.speed;
+      
+      if (speedMps !== null) {
+        // km/h に変換 (m/s * 3.6)
+        let speedKmh = speedMps * 3.6;
+        document.getElementById('speed').textContent = speedKmh.toFixed(1);
+      } else {
+        document.getElementById('speed').textContent = "0.0km/h";
+      }
+    }
+
+    function error(err) {
+      console.warn(`ERROR(${err.code}): ${err.message}`);
+    }
+ let lastSpokenTime = 0;
+
+    // 直近1秒分の揺れを保存する配列
+    let recentValues = [];
+
+    // 実験で記録する値
+    let runningValue = null;
+    let stoppedValue = null;
+
+    function requestAccess() {
+      if (typeof DeviceMotionEvent !== "undefined" &&
+          typeof DeviceMotionEvent.requestPermission === "function") {
+        DeviceMotionEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === "granted") {
+              startSensor();
+            } else {
+              alert("センサーの利用が拒否されました");
+            }
+          })
+          .catch(console.error);
+      } else {
+        startSensor();
+      }
+    }
+
+    function startSensor() {
+      window.addEventListener("devicemotion", handleMotion);
+
+      document.getElementById("permission-btn").style.display = "none";
+      document.getElementById("start-button").style.display = "block";
+      document.getElementById("data-area").style.display = "block";
+
+      speak("測定を開始します、実際の交通ルールに従って走行してください");
+    }
+
+function handleMotion(event) {
+  let x = event.acceleration.x || 0;
+  let y = event.acceleration.y || 0;
+  let z = event.acceleration.z || 0;
+
+  // 加速度の大きさ
+  let total = Math.sqrt(x * x + y * y + z * z);
+
+  document.getElementById("val-total").innerText = total.toFixed(2);
+
+  // 停止判定（しきい値は必要に応じて調整）
+  const threshold = 0.2;
+
+  if (total < threshold) {
+    document.getElementById("stop-status").innerText = "停止";
+  } else {
+    document.getElementById("stop-status").innerText = "走行中";
+  }
+}
+
+ function showhelp(){
+        alert("注意”\n\n１七山豪斗はゴリラなので襲って来る可能性があります。\n２七山豪斗を怒らせてはいけない\n３七山豪斗はでかいので戦意損失しないように意識を保ってください\n");
+    }
+
+
+
+
+
 
 </script>
