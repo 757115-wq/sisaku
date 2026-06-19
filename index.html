@@ -1,0 +1,180 @@
+<justify-content: center>
+ <h1 class ="title-text">一時停止システム</h1>
+ <button id="start-button" type="button" onclick="init()">start</button>
+</center>
+<button id="help-button" onclick="showhelp()">ヘルプ</button>
+<div id="webcam-container"></div>
+<div id="warning-message">止まれ！</div>
+<div id="label-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<meta name="viewport" content="width=device-width">
+<h1 class ="title-text">留萌高校電気建築科</h1>
+<head>
+
+
+ <style>
+
+
+center{
+    display:flex;
+    flex-direction: column;
+    align-items: center
+}
+  div {color:rgb(0, 0, 0);}
+  div {font-size: 40px;}
+  button {color:rgb(235, 10, 10);}
+  button {font-size: 70px;}
+  button {background-color:rgb(250, 217, 0);}
+  button {padding: 5px 100px;
+margin-top: 300px;
+}
+body {
+    display:flex;
+    flex-direction:column;
+    justify-content: center; /*縦中央*/
+    align-items:center; /*横中央*/
+    height: 100vh
+  
+}
+
+ 
+
+/* カメラ映像のサイズ調整（任意） */
+#webcam-container video {
+    max-width: 100%;
+    height: auto;
+}
+
+
+
+#warning-message {
+      display: none; /* 最初は隠しておく（超重要） */
+      font-size: 80px; /* 文字を巨大に */
+      color: white;
+      background-color: red;
+      font-weight: bold;
+      padding: 20px;
+      border-radius: 10px;
+      white-space: nowrap;
+      /* 画面のど真ん中に強制的に配置する魔法のコード */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100; /* カメラより手前に出す */
+  }
+
+
+#help-button{
+position: fixed; top: 20px; left: 20px; font-size: 16px; color: #999; background: white;
+      border: 2px solid #ddd; padding: 6px 22px; border-radius: 20px; font-weight: bold;
+      cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s; z-index: 10;
+}
+
+  </style>
+</head>
+
+
+<script type="text/javascript">
+    // More API functions here:
+    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+    // the link to your model provided by Teachable Machine export panel
+    const URL = "https://teachablemachine.withgoogle.com/models/_2ZlDZ7MH/";
+
+    let model, webcam, labelContainer, maxPredictions;
+
+    function showhelp(){
+        alert("注意”\n\n１七山豪斗はゴリラなので襲って来る可能性があります。\n２七山豪斗を怒らせてはいけない\n３七山豪斗はでかいので戦意損失しないように意識を保ってください\n");
+    }
+
+    // Load the image model and setup the webcam
+    async function init() {
+        document.getElementById("title-text").style.display = "inline";     
+        document.getElementById("start-button").style.display = "none";
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        // load the model and metadata
+        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+        // or files from your local hard drive
+        // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        // Convenience function to setup a webcam
+        const flip = false ; // whether to flip the webcam
+        webcam = new tmImage.Webcam(500,500, flip) // width, height, flip
+        
+
+        await webcam.setup({ facingMode: "environment" }); // request access to the webcam
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+
+        // append elements to the DOM
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        labelContainer = document.getElementById("label-container");
+        for (let i = 0; i < maxPredictions; i++) { // and class labels
+            labelContainer.appendChild(document.createElement("div"));
+        }
+    }
+
+    async function loop() {
+        webcam.update(); // update the webcam frame
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    // run the webcam image through the image model
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        
+        let isStopDetected = false; // 「止まれ」が見つかったかどうかの目印（フラグ）
+
+        for (let i = 0; i < maxPredictions; i++) {
+            const classPrediction =
+                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+ 
+
+            // ▼▼▼ 追加：止まれの判定 ▼▼▼
+            // ※「止まれ」という文字は、Teachable Machineで学習させた時の名前と完全に同じにしてください！
+            if (prediction[i].className === "止まれ" && prediction[i].probability > 0.8) {
+                isStopDetected = true; // 80%以上なら目印をONにする
+                
+            }
+        }
+
+        // すべての判定が終わった後に、画面の表示を切り替える
+        if (isStopDetected === true) {
+            // 見つかったら、警告メッセージを表示する（block）
+            document.getElementById("warning-message").style.display = "block";
+    }
+ 
+if (isStopDetected === true){
+ // 1. コンテキスト作成
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// 2. オシレーター（音源）作成
+const oscillator = audioCtx.createOscillator();
+const gainNode = audioCtx.createGain();
+
+// 3. 周波数設定 (440Hz)
+oscillator.type = 'sine'; // サイン波
+oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // Hz
+
+// 4. 接続と再生
+oscillator.connect(gainNode);
+gainNode.connect(audioCtx.destination);
+gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+oscillator.start();
+gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+
+}
+        else {
+            // 見つからなかったら、隠す（none）
+            document.getElementById("warning-message").style.display = "none";
+            
+        }
+    }
+
+</script>
