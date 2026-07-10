@@ -46,7 +46,7 @@
 <meta name="viewport" content="width=device-width">
 
 
-<div style="display: flex; justify-content: space-between;">
+<div class="photo-area">
   <!-- 左端に配置される写真 -->
   <img src="IMG_02-removebg-preview.png" alt="左の写真" style="width: 30%;">
   
@@ -67,10 +67,32 @@
 }
  
 
+
+.photo-area{
+  display: flex;
+  justify-content: space-between;
+}
+
+/* スマホだけ写真を上に上げる */
+@media screen and (max-width: 768px){
+  .photo-area{
+    margin-top: -80px;
+  }
+}
+
+
+
+
+
+
+
+
+
+
 div {color:rgb(0, 0, 0);}
   div {font-size: 40px;}
   button {color:rgb(0, 0, 0);}
-  button {font-size: 40px;}
+  button {font-size: 20px;}
   button {background-color:rgb(0, 208, 250);}
   button {padding: 5px 30px;}
   button {border-radius: 10px;}
